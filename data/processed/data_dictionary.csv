@@ -1,0 +1,86 @@
+dataset,column,dtype,missing,sample
+01_fund_master.csv,amfi_code,int64,0,119551
+01_fund_master.csv,fund_house,str,0,SBI Mutual Fund
+01_fund_master.csv,scheme_name,str,0,SBI Bluechip Fund - Regular Plan - Growth
+01_fund_master.csv,category,str,0,Equity
+01_fund_master.csv,sub_category,str,0,Large Cap
+01_fund_master.csv,plan,str,0,Regular
+01_fund_master.csv,launch_date,str,0,2006-02-14
+01_fund_master.csv,benchmark,str,0,NIFTY 100 TRI
+01_fund_master.csv,expense_ratio_pct,float64,0,1.54
+01_fund_master.csv,exit_load_pct,float64,0,1.0
+01_fund_master.csv,min_sip_amount,int64,0,500
+01_fund_master.csv,min_lumpsum_amount,int64,0,1000
+01_fund_master.csv,fund_manager,str,0,Sohini Andani
+01_fund_master.csv,risk_category,str,0,Moderate
+01_fund_master.csv,sebi_category_code,str,0,EC01
+02_nav_history.csv,amfi_code,int64,0,119551
+02_nav_history.csv,date,str,0,2022-01-03
+02_nav_history.csv,nav,float64,0,54.3856
+03_aum_by_fund_house.csv,date,str,0,2022-03-31
+03_aum_by_fund_house.csv,fund_house,str,0,SBI Mutual Fund
+03_aum_by_fund_house.csv,aum_lakh_crore,float64,0,6.05
+03_aum_by_fund_house.csv,aum_crore,int64,0,605000
+03_aum_by_fund_house.csv,num_schemes,int64,0,186
+04_monthly_sip_inflows.csv,month,str,0,2022-01
+04_monthly_sip_inflows.csv,sip_inflow_crore,int64,0,11517
+04_monthly_sip_inflows.csv,active_sip_accounts_crore,float64,0,4.91
+04_monthly_sip_inflows.csv,new_sip_accounts_lakh,float64,0,9.1
+04_monthly_sip_inflows.csv,sip_aum_lakh_crore,float64,0,4.8
+04_monthly_sip_inflows.csv,yoy_growth_pct,float64,12,20.31
+05_category_inflows.csv,month,str,0,2024-04
+05_category_inflows.csv,category,str,0,Large Cap
+05_category_inflows.csv,net_inflow_crore,float64,0,2413.0
+06_industry_folio_count.csv,month,str,0,2022-01
+06_industry_folio_count.csv,total_folios_crore,float64,0,13.26
+06_industry_folio_count.csv,equity_folios_crore,float64,0,9.28
+06_industry_folio_count.csv,debt_folios_crore,float64,0,1.86
+06_industry_folio_count.csv,hybrid_folios_crore,float64,0,0.8
+06_industry_folio_count.csv,others_folios_crore,float64,0,1.33
+07_scheme_performance.csv,amfi_code,int64,0,119551
+07_scheme_performance.csv,scheme_name,str,0,SBI Bluechip Fund - Regular Plan - Growth
+07_scheme_performance.csv,fund_house,str,0,SBI Mutual Fund
+07_scheme_performance.csv,category,str,0,Large Cap
+07_scheme_performance.csv,plan,str,0,Regular
+07_scheme_performance.csv,return_1yr_pct,float64,0,12.42
+07_scheme_performance.csv,return_3yr_pct,float64,0,12.36
+07_scheme_performance.csv,return_5yr_pct,float64,0,14.45
+07_scheme_performance.csv,benchmark_3yr_pct,float64,0,11.49
+07_scheme_performance.csv,alpha,float64,0,0.87
+07_scheme_performance.csv,beta,float64,0,0.89
+07_scheme_performance.csv,sharpe_ratio,float64,0,0.88
+07_scheme_performance.csv,sortino_ratio,float64,0,1.29
+07_scheme_performance.csv,std_dev_ann_pct,float64,0,14.0
+07_scheme_performance.csv,max_drawdown_pct,float64,0,-21.7
+07_scheme_performance.csv,aum_crore,int64,0,14288
+07_scheme_performance.csv,expense_ratio_pct,float64,0,1.54
+07_scheme_performance.csv,morningstar_rating,int64,0,4
+07_scheme_performance.csv,risk_grade,str,0,Moderate
+08_investor_transactions.csv,investor_id,str,0,INV003054
+08_investor_transactions.csv,transaction_date,str,0,2024-01-01
+08_investor_transactions.csv,amfi_code,int64,0,119092
+08_investor_transactions.csv,transaction_type,str,0,SIP
+08_investor_transactions.csv,amount_inr,int64,0,1834
+08_investor_transactions.csv,state,str,0,Telangana
+08_investor_transactions.csv,city,str,0,Hyderabad
+08_investor_transactions.csv,city_tier,str,0,T30
+08_investor_transactions.csv,age_group,str,0,56+
+08_investor_transactions.csv,gender,str,0,Female
+08_investor_transactions.csv,annual_income_lakh,float64,0,77.1
+08_investor_transactions.csv,payment_mode,str,0,UPI
+08_investor_transactions.csv,kyc_status,str,0,Verified
+09_portfolio_holdings.csv,amfi_code,int64,0,119551
+09_portfolio_holdings.csv,stock_symbol,str,0,POWERGRID
+09_portfolio_holdings.csv,stock_name,str,0,Power Grid Corporation
+09_portfolio_holdings.csv,sector,str,0,Utilities
+09_portfolio_holdings.csv,weight_pct,float64,0,13.85
+09_portfolio_holdings.csv,market_value_cr,float64,0,737.09
+09_portfolio_holdings.csv,current_price_inr,float64,0,6011.08
+09_portfolio_holdings.csv,portfolio_date,str,0,2025-12-31
+10_benchmark_indices.csv,date,str,0,2022-01-03
+10_benchmark_indices.csv,index_name,str,0,NIFTY50
+10_benchmark_indices.csv,close_value,float64,0,17492.79
+live_nav_key_schemes.csv,amfi_code,int64,0,125497
+live_nav_key_schemes.csv,scheme_label,str,0,HDFC Top 100 Direct
+live_nav_key_schemes.csv,date,str,0,2013-11-18
+live_nav_key_schemes.csv,nav,float64,0,13.0894

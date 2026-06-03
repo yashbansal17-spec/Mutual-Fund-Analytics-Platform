@@ -1,0 +1,11 @@
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+venv/
+*.pyc
+*.db
+*.sqlite
+*.sqlite3
+data/db/
+reports/*.pdf
+reports/*.pptx

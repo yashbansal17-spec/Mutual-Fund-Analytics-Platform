@@ -1,0 +1,12 @@
+table,source_dataset,source_rows,cleaned_rows,db_rows,row_count_note
+dim_fund,fund_master,40,40,40,matches cleaned output
+dim_date,generated,1643,1643,1643,matches cleaned output
+fact_nav,nav_history,46000,64320,64320,matches cleaned output
+fact_transactions,investor_transactions,32778,32778,32778,matches cleaned output
+fact_performance,scheme_performance,40,40,40,matches cleaned output
+fact_aum,aum_by_fund_house,90,90,90,matches cleaned output
+fact_holdings,portfolio_holdings,322,322,322,matches cleaned output
+fact_benchmark,benchmark_indices,8050,8050,8050,matches cleaned output
+fact_sip,monthly_sip_inflows,48,48,48,matches cleaned output
+fact_category_inflows,category_inflows,144,144,144,matches cleaned output
+fact_folios,industry_folio_count,21,21,21,matches cleaned output
