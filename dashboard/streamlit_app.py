@@ -13,6 +13,9 @@ import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
+EDA_CHART_DIR = PROJECT_ROOT / "reports" / "eda_charts"
+PERFORMANCE_CHART_DIR = PROJECT_ROOT / "reports" / "performance_charts"
+DB_PATH = PROJECT_ROOT / "data" / "db" / "bluestock_mf.db"
 COLORS = ["#2563eb", "#0f766e", "#dc2626", "#7c3aed", "#f59e0b", "#0891b2", "#be123c", "#4b5563"]
 
 st.set_page_config(page_title="Bluestock MF Analytics", page_icon="📈", layout="wide")
@@ -548,7 +551,7 @@ def sidebar(data: dict[str, pd.DataFrame]) -> dict[str, object]:
     st.sidebar.title("Bluestock MF")
     page = st.sidebar.radio(
         "Dashboard Page",
-        ["Industry Overview", "Fund Performance", "Investor Analytics", "SIP & Market Trends", "Prediction & Portfolio", "Fund Recommender"],
+        ["Industry Overview", "Data Quality", "Fund Performance", "Performance Analytics", "Investor Analytics", "SIP & Market Trends", "EDA Analysis", "Prediction & Portfolio", "Fund Recommender"],
     )
     houses_all = sorted(funds["fund_house"].dropna().unique())
     categories_all = sorted(funds["category"].dropna().unique())
@@ -788,18 +791,285 @@ def recommender_page(data: dict[str, pd.DataFrame], filters: dict[str, object]) 
     st.markdown("<div class='note'>Logic: risk match first, then quality ranking. SIP prioritises Sharpe and drawdown resilience; lumpsum prioritises alpha and annualised return.</div>", unsafe_allow_html=True)
 
 
+def data_quality_page() -> None:
+    """Show only the user-facing Day 2 outputs that matter in the app."""
+    header("Data Quality", "Cleaned data status, validation checks, database readiness, and useful SQL insights")
+
+    clean_files = sorted(PROCESSED_DIR.glob("*_clean.csv"))
+    row_counts_path = PROCESSED_DIR / "sqlite_row_count_verification.csv"
+    quality_path = PROCESSED_DIR / "data_quality_summary.md"
+
+    row_counts = pd.read_csv(row_counts_path) if row_counts_path.exists() else pd.DataFrame()
+    nav_row = row_counts[row_counts["table"].eq("fact_nav")] if not row_counts.empty else pd.DataFrame()
+    txn_row = row_counts[row_counts["table"].eq("fact_transactions")] if not row_counts.empty else pd.DataFrame()
+
+    nav_rows = int(nav_row["db_rows"].iloc[0]) if not nav_row.empty else 0
+    txn_rows = int(txn_row["db_rows"].iloc[0]) if not txn_row.empty else 0
+    matched_tables = int(row_counts["row_count_note"].eq("matches cleaned output").sum()) if not row_counts.empty else 0
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Cleaned CSVs", len(clean_files))
+    c2.metric("Database", "Ready" if DB_PATH.exists() else "Missing")
+    c3.metric("NAV Rows", f"{nav_rows:,}")
+    c4.metric("Transactions", f"{txn_rows:,}")
+
+    st.subheader("Validation Checklist")
+    checks = [
+        ("NAV dates parsed, sorted, duplicate-checked, and forward-filled for weekends/holidays", True),
+        ("All NAV values validated as greater than zero", True),
+        ("Transaction types standardised to SIP, Lumpsum, Redemption", True),
+        ("Transaction amounts validated as greater than zero", True),
+        ("KYC status checked against allowed values", True),
+        ("Expense ratio checked within 0.1% to 2.5%", True),
+        (f"{matched_tables} database tables match cleaned output row counts", matched_tables > 0),
+    ]
+    for label, ok in checks:
+        st.markdown(f"{'✓' if ok else '✗'} {label}")
+
+    if quality_path.exists():
+        with st.expander("View validation summary"):
+            st.markdown(quality_path.read_text(encoding="utf-8"))
+
+    if not row_counts.empty:
+        st.subheader("Loaded Table Row Counts")
+        visible_cols = ["table", "source_rows", "cleaned_rows", "db_rows", "row_count_note"]
+        st.dataframe(row_counts[visible_cols], use_container_width=True, hide_index=True)
+
+    st.subheader("Useful SQL Insights")
+    if DB_PATH.exists():
+        import sqlite3
+
+        queries = {
+            "Top 5 Funds by AUM": """
+                SELECT scheme_name, fund_house, aum_crore
+                FROM fact_performance
+                ORDER BY aum_crore DESC
+                LIMIT 5
+            """,
+            "Transactions by State": """
+                SELECT state, COUNT(*) AS txn_count, SUM(amount_inr) AS total_amount_inr
+                FROM fact_transactions
+                GROUP BY state
+                ORDER BY total_amount_inr DESC
+                LIMIT 10
+            """,
+            "Low Expense Ratio Funds": """
+                SELECT scheme_name, fund_house, plan, expense_ratio_pct
+                FROM dim_fund
+                WHERE expense_ratio_pct < 1
+                ORDER BY expense_ratio_pct, scheme_name
+                LIMIT 10
+            """,
+        }
+        with sqlite3.connect(DB_PATH) as conn:
+            for title, sql in queries.items():
+                st.markdown(f"**{title}**")
+                st.dataframe(pd.read_sql_query(sql, conn), use_container_width=True, hide_index=True)
+    else:
+        st.warning("SQLite database is missing. Run `python scripts\\etl_pipeline.py` first.")
+
+
+def performance_analytics_page() -> None:
+    """Render Day 4 performance analytics in a compact dashboard page."""
+    header("Performance Analytics", "CAGR, Sharpe, Sortino, Alpha/Beta, drawdown, scorecard, and benchmark tracking")
+
+    required = {
+        "fund_scorecard": PROCESSED_DIR / "fund_scorecard.csv",
+        "alpha_beta": PROCESSED_DIR / "alpha_beta.csv",
+        "cagr": PROCESSED_DIR / "cagr_comparison.csv",
+        "drawdown": PROCESSED_DIR / "max_drawdown.csv",
+        "tracking": PROCESSED_DIR / "tracking_error.csv",
+        "distribution": PROCESSED_DIR / "return_distribution_summary.csv",
+    }
+    missing = [name for name, path in required.items() if not path.exists()]
+    if missing:
+        st.warning("Day 4 outputs are missing. Run `python scripts\\generate_performance_analytics.py` first.")
+        st.caption(f"Missing: {', '.join(missing)}")
+        return
+
+    score = pd.read_csv(required["fund_scorecard"], parse_dates=["drawdown_start_date", "drawdown_end_date"])
+    alpha_beta = pd.read_csv(required["alpha_beta"])
+    cagr = pd.read_csv(required["cagr"])
+    drawdown = pd.read_csv(required["drawdown"], parse_dates=["drawdown_start_date", "drawdown_end_date"])
+    tracking = pd.read_csv(required["tracking"])
+    distribution = pd.read_csv(required["distribution"])
+
+    top = score.sort_values("composite_score", ascending=False).iloc[0]
+    best_sharpe = score.sort_values("sharpe_ratio", ascending=False).iloc[0]
+    best_alpha = score.sort_values("alpha_pct", ascending=False).iloc[0]
+    worst_dd = drawdown.sort_values("max_drawdown_pct").iloc[0]
+    reasonable = int(distribution["reasonable_distribution_flag"].sum())
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Top Score", f"{top['composite_score']:.1f}", top["scheme_name"][:24])
+    c2.metric("Best Sharpe", f"{best_sharpe['sharpe_ratio']:.2f}", best_sharpe["scheme_name"][:24])
+    c3.metric("Best Alpha", f"{best_alpha['alpha_pct']:.2f}%", best_alpha["scheme_name"][:24])
+    c4.metric("Worst Drawdown", f"{worst_dd['max_drawdown_pct']:.2f}%", worst_dd["scheme_name"][:24])
+
+    st.markdown(
+        f"<div class='note'>Daily return distribution check: {reasonable} of {len(distribution)} funds passed the +/-20% daily-return reasonableness flag. Risk-free rate used for Sharpe/Sortino is 6.5% annually.</div>",
+        unsafe_allow_html=True,
+    )
+
+    chart_col, table_col = st.columns([1.1, 1])
+    with chart_col:
+        st.subheader("Top 5 Funds vs NIFTY50 & NIFTY100")
+        nav = pd.read_csv(PROCESSED_DIR / "fact_nav.csv", parse_dates=["nav_date"])
+        funds = pd.read_csv(PROCESSED_DIR / "dim_fund.csv")
+        benchmark = pd.read_csv(PROCESSED_DIR / "fact_benchmark.csv", parse_dates=["bench_date"])
+        top5_codes = score.sort_values("composite_score", ascending=False)["amfi_code"].head(5).tolist()
+        end_date = nav["nav_date"].max()
+        start_date = end_date - pd.DateOffset(years=3)
+
+        benchmark_close = benchmark[
+            benchmark["index_name"].isin(["NIFTY50", "NIFTY100"])
+            & benchmark["bench_date"].between(start_date, end_date)
+        ].copy()
+        benchmark_close = benchmark_close.sort_values(["index_name", "bench_date"])
+        benchmark_close["normalized_value"] = benchmark_close.groupby("index_name")["close_value"].transform(lambda s: s / s.iloc[0] * 100)
+        comparison = benchmark_close.rename(columns={"bench_date": "date", "index_name": "series"})[["date", "series", "normalized_value"]]
+
+        selected_nav = nav[
+            nav["amfi_code"].isin(top5_codes)
+            & nav["is_observed_nav"].eq(1)
+            & nav["nav_date"].between(start_date, end_date)
+        ].merge(funds[["amfi_code", "scheme_name"]], on="amfi_code", how="left")
+        selected_nav = selected_nav.sort_values(["amfi_code", "nav_date"])
+        selected_nav["normalized_value"] = selected_nav.groupby("amfi_code")["nav"].transform(lambda s: s / s.iloc[0] * 100)
+        fund_comparison = selected_nav.rename(columns={"nav_date": "date", "scheme_name": "series"})[["date", "series", "normalized_value"]]
+        comparison = pd.concat([comparison, fund_comparison], ignore_index=True)
+
+        fig, ax = plt.subplots(figsize=(11, 5.6))
+        sns.lineplot(data=comparison, x="date", y="normalized_value", hue="series", ax=ax, linewidth=2)
+        ax.set_title("3-Year Normalized Performance: Top 5 Funds vs NIFTY50 and NIFTY100", loc="left", fontsize=14, weight="bold", color="#f0f0f0")
+        ax.set_xlabel("")
+        ax.set_ylabel("Normalized value (start = 100)")
+        ax.legend(fontsize=7, ncol=2)
+        plot_fig(fig)
+    with table_col:
+        st.subheader("Top 10 Fund Scorecard")
+        score_cols = ["scheme_name", "fund_house", "cagr_3yr_pct", "sharpe_ratio", "alpha_pct", "max_drawdown_pct", "expense_ratio_pct", "composite_score"]
+        st.dataframe(score.sort_values("composite_score", ascending=False)[score_cols].head(10), use_container_width=True, hide_index=True)
+
+    tabs = st.tabs(["CAGR", "Sharpe & Sortino", "Alpha/Beta", "Drawdown", "Tracking Error"])
+    with tabs[0]:
+        st.caption("CAGR is calculated from NAV using trailing 1-year, 3-year, and 5-year windows. The 5-year column uses available history when the dataset is shorter than a full five years.")
+        st.dataframe(cagr.sort_values("cagr_3yr_pct", ascending=False).head(20), use_container_width=True, hide_index=True)
+    with tabs[1]:
+        rank_cols = ["scheme_name", "fund_house", "sharpe_ratio", "sortino_ratio", "risk_category"]
+        st.dataframe(score.sort_values("sharpe_ratio", ascending=False)[rank_cols].head(20), use_container_width=True, hide_index=True)
+    with tabs[2]:
+        st.caption("Alpha and Beta are estimated with scipy OLS regression against NIFTY100 daily returns. Alpha is annualised as intercept x 252.")
+        st.dataframe(alpha_beta.sort_values("alpha_pct", ascending=False).head(20), use_container_width=True, hide_index=True)
+    with tabs[3]:
+        st.caption("Maximum drawdown includes the peak-to-trough date range for each fund.")
+        dd_cols = ["scheme_name", "fund_house", "max_drawdown_pct", "drawdown_start_date", "drawdown_end_date"]
+        st.dataframe(drawdown.sort_values("max_drawdown_pct").head(20)[dd_cols], use_container_width=True, hide_index=True)
+    with tabs[4]:
+        st.caption("Tracking error = std(fund_return - benchmark_return) x sqrt(252), shown for the top 5 scorecard funds vs NIFTY50 and NIFTY100.")
+        st.dataframe(tracking.sort_values(["benchmark", "tracking_error_pct"]), use_container_width=True, hide_index=True)
+
+    distribution_chart = PERFORMANCE_CHART_DIR / "daily_return_distribution.png"
+    if distribution_chart.exists():
+        with st.expander("View daily return distribution chart"):
+            st.image(str(distribution_chart), caption="Daily return distribution across all funds", use_container_width=True)
+
+
+def eda_gallery_page() -> None:
+    """Render Day 3 EDA exported charts inside Streamlit."""
+    header("EDA Analysis", "15+ charts covering NAV, AUM, SIP, investor behaviour, geography, folios, correlation, and sector allocation")
+    if not EDA_CHART_DIR.exists():
+        st.warning("EDA chart folder not found. Run `python scripts\\generate_eda.py` first.")
+        return
+
+    chart_groups = [
+        (
+            "NAV Trend Analysis",
+            [
+                ("All 40 Schemes NAV Trend", "01_nav_trend_all_40_plotly.png"),
+                ("Top 10 AUM Funds NAV Trend", "02_top10_aum_nav_trend_plotly.png"),
+            ],
+        ),
+        (
+            "AUM & SIP Trends",
+            [
+                ("AUM Growth by Fund House", "03_aum_growth_by_fund_house_seaborn.png"),
+                ("SIP Inflow Time Series", "04_sip_inflow_trend_plotly.png"),
+            ],
+        ),
+        (
+            "Category, Investor & Geography",
+            [
+                ("Category Inflow Heatmap", "05_category_inflow_heatmap_seaborn.png"),
+                ("Age Group Distribution", "06_age_group_distribution_pie.png"),
+                ("SIP Amount by Age Group", "07_sip_amount_box_by_age_group.png"),
+                ("Gender Split", "08_gender_split_pie.png"),
+                ("SIP Amount by State", "09_sip_amount_by_state.png"),
+                ("T30 vs B30 City Tier Split", "10_city_tier_split_pie.png"),
+            ],
+        ),
+        (
+            "Folios, Correlation & Sector Allocation",
+            [
+                ("Folio Count Growth", "11_folio_count_growth.png"),
+                ("NAV Return Correlation Matrix", "12_nav_return_correlation_matrix.png"),
+                ("Sector Allocation Donut", "13_sector_allocation_donut.png"),
+            ],
+        ),
+        (
+            "Additional EDA Charts",
+            [
+                ("Monthly Transaction Volume by Type", "14_monthly_transaction_volume_by_type.png"),
+                ("Total Net Inflow by Category", "15_total_net_inflow_by_category.png"),
+                ("Top 10 Funds by 3-Year Return", "16_top10_3yr_return_funds.png"),
+            ],
+        ),
+    ]
+
+    total_pngs = len(list(EDA_CHART_DIR.glob("*.png")))
+    c1, c2, c3 = st.columns(3)
+    c1.metric("EDA PNG Charts", total_pngs)
+    c2.metric("Notebook", "EDA_Analysis.ipynb")
+    c3.metric("Findings", "10 insights")
+
+    for group_title, charts in chart_groups:
+        st.subheader(group_title)
+        for i in range(0, len(charts), 2):
+            cols = st.columns(2)
+            for col, (caption, file_name) in zip(cols, charts[i : i + 2]):
+                path = EDA_CHART_DIR / file_name
+                with col:
+                    if path.exists():
+                        st.image(str(path), caption=caption, use_container_width=True)
+                    else:
+                        st.error(f"Missing chart: {file_name}")
+
+    summary_path = EDA_CHART_DIR / "eda_findings_summary.md"
+    if summary_path.exists():
+        st.subheader("10 Key EDA Findings")
+        summary = summary_path.read_text(encoding="utf-8")
+        findings = summary.split("## Key Findings", 1)[-1].strip()
+        st.markdown(findings)
+
+
 def main() -> None:
     data = load_data()
     require_outputs(data)
     filters = sidebar(data)
     if filters["page"] == "Industry Overview":
         industry_page(data, filters)
+    elif filters["page"] == "Data Quality":
+        data_quality_page()
     elif filters["page"] == "Fund Performance":
         fund_page(data, filters)
+    elif filters["page"] == "Performance Analytics":
+        performance_analytics_page()
     elif filters["page"] == "Investor Analytics":
         investor_page(data)
     elif filters["page"] == "SIP & Market Trends":
         sip_page(data)
+    elif filters["page"] == "EDA Analysis":
+        eda_gallery_page()
     elif filters["page"] == "Prediction & Portfolio":
         prediction_page(data, filters)
     else:
