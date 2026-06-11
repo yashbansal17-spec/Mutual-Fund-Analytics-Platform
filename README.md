@@ -127,20 +127,6 @@ Main dashboard pages:
 - `notebooks/Performance_Analytics.ipynb`
 - `notebooks/EDA_Analysis.ipynb`
 
-## Validation
-
-Run analysis validation:
-
-```powershell
-python scripts\validate_analysis_outputs.py
-```
-
-Run chart validation:
-
-```powershell
-python scripts\validate_chart_outputs.py
-```
-
 ## Important Notes
 
 - File paths use `pathlib.Path`; local absolute paths are avoided inside reusable scripts.
