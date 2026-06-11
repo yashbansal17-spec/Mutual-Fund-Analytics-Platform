@@ -96,21 +96,6 @@ Main dashboard pages:
 - Power BI Export
 - Fund Recommender
 
-## Flask API
-
-Run the API:
-
-```powershell
-python api\app.py
-```
-
-Example endpoints:
-
-- `http://127.0.0.1:5000/api/health`
-- `http://127.0.0.1:5000/api/top-funds?limit=5`
-- `http://127.0.0.1:5000/api/industry-summary`
-- `http://127.0.0.1:5000/api/state-transactions?limit=10`
-
 ## Dataset Descriptions
 
 | File | Description |
