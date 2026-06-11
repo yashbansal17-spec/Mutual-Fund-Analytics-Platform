@@ -1,0 +1,16 @@
+{
+  "model": "RandomForestRegressor",
+  "target": "cagr_3yr_pct",
+  "features": [
+    "expense_ratio_pct",
+    "aum_crore",
+    "sharpe_ratio",
+    "sortino_ratio",
+    "alpha_pct",
+    "beta",
+    "max_drawdown_pct"
+  ],
+  "test_rows": 10,
+  "mae": 4.399470836669368,
+  "r2": 0.808499457336863
+}

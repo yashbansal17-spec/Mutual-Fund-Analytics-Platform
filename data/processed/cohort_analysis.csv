@@ -1,3 +1,3 @@
-first_year,investors,total_invested_inr,transaction_count,average_sip_amount_inr,sub_category
-2024,4803,3491125187,32499,10996.885825361911,Large Cap
-2025,197,30455243,279,13505.209580838324,Large Cap
+first_transaction_year,investors,total_invested_inr,transaction_count,average_sip_amount_inr,top_fund_preference,top_fund_amount_inr
+2024,4803,3491125187,32499,10996.885825361911,UTI Nifty 50 Index Fund - Regular - Growth,100126141
+2025,197,30455243,279,13505.209580838324,SBI Small Cap Fund - Direct Plan - Growth,1478507

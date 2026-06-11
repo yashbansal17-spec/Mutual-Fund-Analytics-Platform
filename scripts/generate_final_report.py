@@ -1,0 +1,147 @@
+"""Create final capstone report notebook with narrative, charts, and findings."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+NOTEBOOK_PATH = PROJECT_ROOT / "notebooks" / "Final_Report.ipynb"
+
+
+def md(source: list[str] | str) -> dict:
+    """Return a markdown cell."""
+    if isinstance(source, str):
+        source = [source]
+    return {"cell_type": "markdown", "metadata": {}, "source": source}
+
+
+def code(source: list[str] | str) -> dict:
+    """Return a code cell."""
+    if isinstance(source, str):
+        source = [source]
+    return {"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [], "source": source}
+
+
+def main() -> None:
+    """Write final report notebook."""
+    cells = [
+        md(
+            [
+                "# Bluestock Mutual Fund Analytics Platform - Final Report\n",
+                "\n",
+                "This report summarises the complete fintech capstone: data cleaning, EDA, SQL analysis, performance analytics, API delivery, and optional ML modelling.\n",
+            ]
+        ),
+        md(
+            [
+                "## Executive Summary\n",
+                "- Built an end-to-end mutual fund analytics project using 10 financial datasets.\n",
+                "- Cleaned NAV, transaction, performance, AUM, SIP, holdings, benchmark, and folio data.\n",
+                "- Created SQLite-ready tables and PostgreSQL business queries.\n",
+                "- Built Streamlit dashboard pages for data quality, EDA, performance analytics, investor analytics, trends, prediction, and recommender logic.\n",
+                "- Added a Flask API with JSON endpoints for top funds, fund detail, industry summary, and state transactions.\n",
+                "- Added an optional ML regression model for predicting 3-year CAGR from fund metrics.\n",
+            ]
+        ),
+        code(
+            [
+                "from pathlib import Path\n",
+                "import pandas as pd\n",
+                "PROJECT_ROOT = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()\n",
+                "PROCESSED = PROJECT_ROOT / 'data' / 'processed'\n",
+                "pd.read_csv(PROCESSED / 'fund_scorecard.csv').head(10)\n",
+            ]
+        ),
+        md(
+            [
+                "## Data Cleaning Pipeline\n",
+                "The Pandas ETL pipeline handles date parsing, duplicate removal, NAV forward-fill for weekends/holidays, transaction enum standardisation, amount validation, KYC checks, and expense-ratio validation.\n",
+                "\n",
+                "Key files:\n",
+                "- `scripts/etl_pipeline.py`\n",
+                "- `data/processed/*_clean.csv`\n",
+                "- `data/processed/data_quality_summary.md`\n",
+                "- `data/processed/sqlite_row_count_verification.csv`\n",
+            ]
+        ),
+        md(
+            [
+                "## Exploratory Data Analysis\n",
+                "EDA covers NAV trends, AUM growth, SIP inflows, category inflows, investor demographics, geography, folio growth, return correlations, and sector allocation.\n",
+                "\n",
+                "![NAV Trend](../reports/eda_charts/01_nav_trend_all_40_plotly.png)\n",
+                "\n",
+                "![Category Heatmap](../reports/eda_charts/05_category_inflow_heatmap_seaborn.png)\n",
+                "\n",
+                "![Correlation Matrix](../reports/eda_charts/12_nav_return_correlation_matrix.png)\n",
+            ]
+        ),
+        md(
+            [
+                "## Performance Analytics\n",
+                "Performance analysis computes daily returns, CAGR, Sharpe ratio, Sortino ratio, Alpha, Beta, maximum drawdown, fund scorecard, benchmark comparison, and tracking error.\n",
+                "\n",
+                "![Benchmark Comparison](../reports/performance_charts/benchmark_comparison_top5.png)\n",
+            ]
+        ),
+        md(
+            [
+                "## SQL Business Questions\n",
+                "The project includes PostgreSQL-ready business queries in `sql/postgresql_business_queries.sql`, covering AUM leaders, monthly NAV trends, transaction geography, low-cost funds, SIP growth, category inflows, scorecard leaders, and redemption share.\n",
+            ]
+        ),
+        md(
+            [
+                "## Flask API\n",
+                "The Flask API is implemented in `api/app.py`.\n",
+                "\n",
+                "Available endpoints:\n",
+                "- `/api/health`\n",
+                "- `/api/top-funds?limit=5`\n",
+                "- `/api/fund/<amfi_code>`\n",
+                "- `/api/industry-summary`\n",
+                "- `/api/state-transactions?limit=10`\n",
+            ]
+        ),
+        md(
+            [
+                "## Optional ML Model\n",
+                "A RandomForestRegressor predicts 3-year CAGR using expense ratio, AUM, Sharpe, Sortino, Alpha, Beta, and max drawdown. Outputs are saved in `models/`.\n",
+            ]
+        ),
+        code(
+            [
+                "import json\n",
+                "metrics_path = PROJECT_ROOT / 'models' / 'fund_return_model_metrics.json'\n",
+                "json.loads(metrics_path.read_text()) if metrics_path.exists() else 'Run scripts/train_ml_model.py first'\n",
+            ]
+        ),
+        md(
+            [
+                "## Final Findings\n",
+                "1. SIP inflows reached the dataset high of Rs 31,002 crore in December 2025.\n",
+                "2. SBI Mutual Fund leads the AUM trend at Rs 12.5 lakh crore in the latest AUM snapshot.\n",
+                "3. The fund scorecard ranks funds on return, risk-adjusted performance, alpha, cost, and drawdown resilience.\n",
+                "4. Transaction geography and demographic cuts show strong variation by state, city tier, and age segment.\n",
+                "5. NAV, benchmark, and holdings data together support fund selection, risk review, and portfolio comparison workflows.\n",
+            ]
+        ),
+    ]
+
+    notebook = {
+        "cells": cells,
+        "metadata": {
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python", "version": "3.10+"},
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    NOTEBOOK_PATH.write_text(json.dumps(notebook, indent=2), encoding="utf-8")
+    print(f"Created {NOTEBOOK_PATH}")
+
+
+if __name__ == "__main__":
+    main()

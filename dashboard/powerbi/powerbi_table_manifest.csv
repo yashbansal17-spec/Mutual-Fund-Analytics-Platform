@@ -1,0 +1,9 @@
+table_name,rows,columns,source
+dim_fund,40,15,data/processed/dim_fund.csv
+dim_date,1643,9,data/processed/dim_date.csv
+fact_nav,64320,6,data/processed/fact_nav.csv
+fact_transactions,32778,14,data/processed/fact_transactions.csv
+fact_performance,40,19,data/processed/fact_performance.csv
+fact_aum,90,6,data/processed/fact_aum.csv
+fact_sip,48,7,data/processed/fact_sip.csv
+fact_category_inflows,144,4,data/processed/fact_category_inflows.csv

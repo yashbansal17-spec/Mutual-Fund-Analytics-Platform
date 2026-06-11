@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="82" viewBox="0 0 360 82">
+  <path d="M18 58 L32 36 L47 51 L67 20 L84 40" fill="none" stroke="#7c5cff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 65 L38 65 L52 43 L71 43 L87 30" fill="none" stroke="#3847ff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <circle cx="88" cy="30" r="5" fill="#ff8a1f"/>
+  <text x="108" y="52" fill="#ffffff" font-family="Segoe UI, Arial, sans-serif" font-size="29" font-weight="800" letter-spacing="3">BLUESTOCK</text>
+  <text x="304" y="66" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700">.in</text>
+  <text x="333" y="22" fill="#cbd5e1" font-family="Segoe UI, Arial, sans-serif" font-size="9" font-weight="700">TM</text>
+</svg>

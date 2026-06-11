@@ -1,0 +1,52 @@
+{
+  "name": "Bluestock Dark",
+  "dataColors": [
+    "#00e5ff",
+    "#2979ff",
+    "#00bfa5",
+    "#ffd740",
+    "#ff4d5a",
+    "#8b5cf6",
+    "#22c55e",
+    "#f97316"
+  ],
+  "background": "#050505",
+  "foreground": "#f4f7fb",
+  "tableAccent": "#00e5ff",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "title": [
+          {
+            "color": {
+              "solid": {
+                "color": "#f4f7fb"
+              }
+            },
+            "fontFace": "Segoe UI Semibold"
+          }
+        ],
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#101214"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#24272b"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
